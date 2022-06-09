@@ -116,6 +116,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.7.0"
+  naver_map_plugin:
+    dependency: "direct main"
+    description:
+      name: naver_map_plugin
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.9.6"
   path:
     dependency: transitive
     description:
@@ -186,3 +193,4 @@ packages:
     version: "2.1.1"
 sdks:
   dart: ">=2.16.2 <3.0.0"
+  flutter: ">=1.11.0"

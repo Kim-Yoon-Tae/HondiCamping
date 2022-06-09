@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'HomeUI.dart';
-import './style.dart' as style; // 변수 중복문제 피하기 1
+import './style.dart' as style; // 변수 중복문제 피하기
+import './NaverMap.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -42,7 +43,7 @@ class _MyAppState extends State<MyApp> {
           )
         ],
       ),
-      body: [HomeUI(), TourUI, MyPage][_selectedIndex], // 탭 3개
+      body: [HomeUI(), NaverMapTest(), MyPage][_selectedIndex], // 탭 3개
       bottomNavigationBar: BottomNavigationBar(
         //type: BottomNavigationBarType.shifting,
         selectedFontSize: 20,
