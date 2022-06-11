@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class HomeUI extends StatefulWidget {
   const HomeUI({Key? key}) : super(key: key);
@@ -80,7 +81,13 @@ class _HomeUIState extends State<HomeUI> {
           )
       );
     } else { // 로딩중 이미지 출력
-      return CircularProgressIndicator();
+      return Container(
+        child : Center(
+          child: LoadingAnimationWidget.inkDrop(
+              color: Colors.teal,
+              size: 200),
+        )
+      );
     }
   }
 }
