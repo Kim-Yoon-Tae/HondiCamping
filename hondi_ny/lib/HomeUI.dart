@@ -13,34 +13,49 @@ class HomeUI extends StatefulWidget {
 class _HomeUIState extends State<HomeUI> {
 
 
-  var authkey = 't8cep12p82p6rbc2c11c6ebee_2c1bpo'; // 나영 인증키
+  final authkey = 'q6tw/AWLdEFNCHf6qcCrXFWErhIdK4fr9cHdlIX/2KRVOvi90Jr3f8u3/SvhBH4mTcgzOu5I6nRlKvWwem2WKw=='; // 나영 인증키
+  var json;
+  var data = {};
+  var mapx = 126.8395857; // (현재 GPS좌표)(임시로 표선으로 저장)
+  var mapy = 33.3259761; // (현재 GPS좌표)(임시로 표선으로 저장)
 
-  var data = [];
-  var result;
-
-  getData() async {
-    var response = await http.get(Uri.parse
-      ('https://open.jejudatahub.net/api/proxy/a11801tD1bttatDttD1b0t1Dt80b011a/${authkey}?&limit=100'));
+  getData() async { // ${mapX}&mapY=${mapY}
+    var response
+    = await http.get(Uri.parse
+      ('http://api.visitkorea.or.kr/openapi/service/rest/GoCamping/locationBasedList?'
+        'ServiceKey=${authkey}'
+        '&MobileOS=ETC&MobileApp=AppTest&mapX=${mapx}&mapY=${mapy}&radius=2000&_type=json'));
+    var body = utf8.decode(response.bodyBytes);
 
     if (response.statusCode == 200) {
-      setState(() {
-        result = jsonDecode(response.body);
-        data = result['data']; // list형
-      });
-      // 만약 서버가 OK 응답을 반환하면, JSON을 파싱
-      print(result); //확인용
-      print(data.length); //확인용
-      //  print(data is List<dynamic>); // true
-    } else {
-      // 만약 응답이 OK가 아니면, 에러를 던집니다.
-      throw Exception('Failed to load post');
+      print(body); // 확인용
+      json = jsonDecode(body);
+
+      if (json['response']['header']['resultCode'] == "0000") {
+        if (json['response']['body']['items'] == '') {
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  content: Text("마지막 데이터 입니다."),
+                );
+              });
+        } else {
+          print(json); //확인용
+        }
+      } else {
+        // 만약 응답이 OK가 아니면, 에러를 던집니다.
+        throw Exception('Failed to load post');
+      }
     }
 
-    // print(data['data'][0]); //확인용
+     data = json['response']['body']['items'];
+      print(data);
+     print(data.length); //확인용
   }
 
 
-  @override
+    @override
   void initState() { // 위젯 초기화시 1번 호출
     super.initState();
     getData();
@@ -51,10 +66,10 @@ class _HomeUIState extends State<HomeUI> {
     if (data.isNotEmpty){
       return Scaffold(
           body: Container(
-            child: ListView.builder(
+           child: ListView.builder(
                 itemCount: data.length,
                 itemBuilder: (c,i){
-                  return Text(data[i]['placeName']);
+                  return Text(data["item"]["facltNm"]?? 'default value'); // 야영장명 출력
                 }),
           )
       );
