@@ -31,6 +31,7 @@ dependencies:
     sdk: flutter
   http: ^0.13.4
   naver_map_plugin: ^0.9.6
+  loading_animation_widget: ^1.2.0+1
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -53,6 +54,21 @@ dev_dependencies:
 
 # The following section is specific to Flutter.
 flutter:
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  fonts:
+    - family: jeju
+      fonts:
+        - asset: fonts/JejuGothic.ttf
+        #저작권: 제주명조체, 제주특별자치도,
+        #https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=419035&menuNo=200026
+    - family: Suseong
+      fonts:
+        - asset: fonts/SuseongDotum.ttf
+        #저작권: 수성돋음체, 대구광역시 수성구,
+        # https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13304311&menuNo=200023
+
+
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
