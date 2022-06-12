@@ -12,31 +12,44 @@ class HomeUI extends StatefulWidget {
 
 class _HomeUIState extends State<HomeUI> {
 
+  var data;
 
-  var authkey = 't8cep12p82p6rbc2c11c6ebee_2c1bpo'; // 나영 인증키
+  int len = 0;
 
-  var data = [];
-  var result;
+  final String authkey = 'q6tw/AWLdEFNCHf6qcCrXFWErhIdK4fr9cHdlIX/2KRVOvi90Jr3f8u3/SvhBH4mTcgzOu5I6nRlKvWwem2WKw=='; // 나영 인증키
+  double mapx = 128.6142847;// 126.8395857;//  // (현재 GPS좌표)(샘플데이터 기준)
+  double mapy = 36.0345423;  // 33.3259761;// (현재 GPS좌표)(샘플데이터 기준)
 
   getData() async {
-    var response = await http.get(Uri.parse
-      ('https://open.jejudatahub.net/api/proxy/a11801tD1bttatDttD1b0t1Dt80b011a/${authkey}?&limit=100'));
+    final http.Response response
+    = await http.get(Uri.parse
+      ('http://api.visitkorea.or.kr/openapi/service/rest/GoCamping/locationBasedList?'
+        'ServiceKey=${authkey}'
+        '&MobileOS=ETC&MobileApp=AppTest&mapX=${mapx}&mapY=${mapy}&radius=2000&_type=json'));
 
     if (response.statusCode == 200) {
-      setState(() {
-        result = jsonDecode(response.body);
-        data = result['data']; // list형
+
+      var body = utf8.decode(response.bodyBytes);
+      //print("body \n $body"); // 확인용
+
+      var json = jsonDecode(body);
+      //print("json \n $json"); // 확인용
+      setState((){
+        data = json['response']['body']['items']['item'];
+        if(data is List){ // totalCount가 2개 이상일 때는 list로 받게 됨.
+          len = data.length;
+        }else if(data is Map){ // totalCount가 하나일 때는 map으로 받게 됨.
+          len = 1;
+        }
       });
-      // 만약 서버가 OK 응답을 반환하면, JSON을 파싱
-      print(result); //확인용
-      print(data.length); //확인용
-      //  print(data is List<dynamic>); // true
+
+      print("data \n $data"); // 확인용
+      //print(data.runtimeType); // 확인용
+
     } else {
       // 만약 응답이 OK가 아니면, 에러를 던집니다.
       throw Exception('Failed to load post');
     }
-
-    // print(data['data'][0]); //확인용
   }
 
 
@@ -45,22 +58,29 @@ class _HomeUIState extends State<HomeUI> {
     super.initState();
     getData();
   }
+
+
   @override
   Widget build(BuildContext context) {
-
-    if (data.isNotEmpty){
+    if (data != null) {
       return Scaffold(
           body: Container(
             child: ListView.builder(
-                itemCount: data.length,
-                itemBuilder: (c,i){
-                  return Text(data[i]['placeName']);
-                }),
+                itemCount: len,
+                itemBuilder: (c, i) {
+                  if(data is List) {
+                    return Text(
+                        data[i]["facltNm"] ?? 'default value');
+                  }else{
+                    return Text(
+                        data["facltNm"].toString());// 야영장명 출력
+                  }
+                }
+            ),
           )
       );
     } else { // 로딩중 이미지 출력
-      return  CircularProgressIndicator();
+      return CircularProgressIndicator();
     }
-
   }
 }

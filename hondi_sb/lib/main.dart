@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'HomeUI.dart';
+import 'LocationBasedList.dart';
 import './style.dart' as style; // 변수 중복문제 피하기
 import './NaverMap.dart';
 import 'marker.dart';
-
 
 void main() {
   runApp(MaterialApp(
@@ -37,15 +36,9 @@ class _MyAppState extends State<MyApp> {
     return Scaffold(
       appBar: AppBar(
         title: Text('HONDI CAMPING', style: title,),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add_box_outlined), //임시 아이콘 -> 변경 및 삭제 가능
-            onPressed: (){},
-            iconSize: 30,
-          )
-        ],
+        actions: [],
       ),
-      body: [HomeUI(), NaverMapTest(), MarkerMapPage()][_selectedIndex], // 탭 3개
+      body: [MarkerMapPage(), NearbyCampingSites()][_selectedIndex], // 탭 3개
       bottomNavigationBar: BottomNavigationBar(
         //type: BottomNavigationBarType.shifting,
         selectedFontSize: 20,
@@ -62,10 +55,7 @@ class _MyAppState extends State<MyApp> {
               label: '홈'),
           BottomNavigationBarItem(
               icon: Icon(Icons.map, ),
-              label: '주변 관광지 정보'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.location_pin,),
-              label: 'marker')
+              label: '주변 캠핑장 찾기'),
         ],
 
       ),

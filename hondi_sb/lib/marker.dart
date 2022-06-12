@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
+import 'LocationBasedList.dart';
 import 'package:flutter/material.dart';
-import 'package:hondi_ny/HomeUI.dart';
 import 'package:naver_map_plugin/naver_map_plugin.dart';
+import 'package:http/http.dart' as http;
 
 class MarkerMapPage extends StatefulWidget {
   @override
@@ -18,6 +20,47 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
 
   Completer<NaverMapController> _controller = Completer();
   List<Marker> _markers = [];
+  List<LatLng> _latLang = [];
+
+  var data;
+
+  int len = 0;
+
+  final String authkey = 'q6tw/AWLdEFNCHf6qcCrXFWErhIdK4fr9cHdlIX/2KRVOvi90Jr3f8u3/SvhBH4mTcgzOu5I6nRlKvWwem2WKw=='; // 나영 인증키
+  double mapx = 128.6142847;// 126.8395857;//  // (현재 GPS좌표)(샘플데이터 기준)
+  double mapy = 36.0345423;  // 33.3259761;// (현재 GPS좌표)(샘플데이터 기준)
+
+  getData() async {
+    final http.Response response
+    = await http.get(Uri.parse
+      ('http://api.visitkorea.or.kr/openapi/service/rest/GoCamping/locationBasedList?'
+        'ServiceKey=${authkey}'
+        '&MobileOS=ETC&MobileApp=AppTest&mapX=${mapx}&mapY=${mapy}&radius=2000&_type=json'));
+
+    if (response.statusCode == 200) {
+
+      var body = utf8.decode(response.bodyBytes);
+      //print("body \n $body"); // 확인용
+
+      var json = jsonDecode(body);
+      //print("json \n $json"); // 확인용
+      setState((){
+        data = json['response']['body']['items']['item'];
+        if(data is List){ // totalCount가 2개 이상일 때는 list로 받게 됨.
+          len = data.length;
+        }else if(data is Map){ // totalCount가 하나일 때는 map으로 받게 됨.
+          len = 1;
+        }
+      });
+
+      print("data \n $data"); // 확인용
+      //print(data.runtimeType); // 확인용
+
+    } else {
+      // 만약 응답이 OK가 아니면, 에러를 던집니다.
+      throw Exception('Failed to load post');
+    }
+  }
 
   @override
   void initState() {
@@ -45,15 +88,24 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
       });
     });
     super.initState();
+    getData();
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(),
         body: Column(
           children: <Widget>[
+            ElevatedButton.icon(     // <-- TextButton
+              onPressed: (){
+                Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => NearbyCampingSites()),
+                );
+              },
+              icon: Icon(Icons.near_me,),
+              label: Text('주변 캠핑장 목록 조회'),
+            ),
             _controlPanel(),
             _naverMap(),
           ],
@@ -152,7 +204,7 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
             onMapTap: _onMapTap,
             markers: _markers,
             initLocationTrackingMode: LocationTrackingMode.Follow,
-            locationButtonEnable: true
+            locationButtonEnable: true,
           ),
         ],
       ),

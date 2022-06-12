@@ -13,22 +13,28 @@ dependencies:
     sdk: flutter
   http: ^0.13.4
   naver_map_plugin: ^0.9.6
+  loading_animation_widget: ^1.2.0+1
 
   cupertino_icons: ^1.0.2
-  geolocator: ^8.0.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^1.0.0
-
 flutter:
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  fonts:
+    - family: jeju
+      fonts:
+        - asset: fonts/JejuGothic.ttf
+        #저작권: 제주명조체, 제주특별자치도,
+        #https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=419035&menuNo=200026
+    - family: Suseong
+      fonts:
+        - asset: fonts/SuseongDotum.ttf
+        #저작권: 수성돋음체, 대구광역시 수성구,
+        # https://gongu.copyright.or.kr/gongu/wrt/wrt/view.do?wrtSn=13304311&menuNo=200023
+
   uses-material-design: true
-  plugin:
-    platforms:
-      android:
-        package: map.naver.plugin.net.lbstech.naver_map_plugin
-        pluginClass: NaverMapPlugin
-      ios:
-        pluginClass: NaverMapPlugin
