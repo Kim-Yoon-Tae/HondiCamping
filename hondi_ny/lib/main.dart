@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'HomeUI.dart';
+import 'LocationBasedList.dart';
 import './style.dart' as style; // 변수 중복문제 피하기
 import './NaverMap.dart';
 
@@ -43,7 +43,7 @@ class _MyAppState extends State<MyApp> {
           )
         ],
       ),
-      body: [HomeUI(), NaverMapTest(), MyPage][_selectedIndex], // 탭 3개
+      body: [NaverMapTest(), NearbyCampingSites()][_selectedIndex], // 탭 3개
       bottomNavigationBar: BottomNavigationBar(
         //type: BottomNavigationBarType.shifting,
         selectedFontSize: 20,
@@ -60,10 +60,7 @@ class _MyAppState extends State<MyApp> {
               label: '홈'),
           BottomNavigationBarItem(
               icon: Icon(Icons.map, ),
-              label: '주변 관광지 정보'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_circle,),
-              label: '마이페이지')
+              label: '주변 캠핑장 찾기'),
         ],
 
       ),
