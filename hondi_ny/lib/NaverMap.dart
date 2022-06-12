@@ -4,7 +4,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:naver_map_plugin/naver_map_plugin.dart';
-
+import 'LocationBasedList.dart';
 
 class NaverMapTest extends StatefulWidget {
   @override

@@ -32,6 +32,7 @@ dependencies:
   http: ^0.13.4
   naver_map_plugin: ^0.9.6
   loading_animation_widget: ^1.2.0+1
+  geolocator: ^8.2.1
 
 
   # The following adds the Cupertino Icons font to your application.
