@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
 
+import 'package:geolocator/geolocator.dart';
+
 import 'LocationBasedList.dart';
 import 'package:flutter/material.dart';
 import 'package:naver_map_plugin/naver_map_plugin.dart';
@@ -20,46 +22,83 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
 
   Completer<NaverMapController> _controller = Completer();
   List<Marker> _markers = [];
-  List<LatLng> _latLang = [];
+  //List<LatLng> _latLang = [];
+  var long;
+  var lat;
 
   var data;
+  bool loading = true;
+  final String authkey = 'q6tw/AWLdEFNCHf6qcCrXFWErhIdK4fr9cHdlIX/2KRVOvi90Jr3f8u3/SvhBH4mTcgzOu5I6nRlKvWwem2WKw==';
+  late double mapX;
+  late double mapY;
 
-  int len = 0;
-
-  final String authkey = 'q6tw/AWLdEFNCHf6qcCrXFWErhIdK4fr9cHdlIX/2KRVOvi90Jr3f8u3/SvhBH4mTcgzOu5I6nRlKvWwem2WKw=='; // 나영 인증키
-  double mapx = 128.6142847;// 126.8395857;//  // (현재 GPS좌표)(샘플데이터 기준)
-  double mapy = 36.0345423;  // 33.3259761;// (현재 GPS좌표)(샘플데이터 기준)
+  getPosition() async {
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    setState((){
+      mapX = position.longitude;
+      mapY = position.latitude;
+    });
+    print(mapX);
+    print(mapY);
+  }
 
   getData() async {
     final http.Response response
     = await http.get(Uri.parse
       ('http://api.visitkorea.or.kr/openapi/service/rest/GoCamping/locationBasedList?'
         'ServiceKey=${authkey}'
-        '&MobileOS=ETC&MobileApp=AppTest&mapX=${mapx}&mapY=${mapy}&radius=2000&_type=json'));
+        '&MobileOS=ETC&MobileApp=AppTest&mapX=${mapX}&mapY=${mapY}&radius=20000&_type=json'));
 
     if (response.statusCode == 200) {
-
       var body = utf8.decode(response.bodyBytes);
-      //print("body \n $body"); // 확인용
-
+      //print("body \n $body");
       var json = jsonDecode(body);
-      //print("json \n $json"); // 확인용
+
       setState((){
         data = json['response']['body']['items']['item'];
-        if(data is List){ // totalCount가 2개 이상일 때는 list로 받게 됨.
-          len = data.length;
-        }else if(data is Map){ // totalCount가 하나일 때는 map으로 받게 됨.
-          len = 1;
-        }
       });
-
-      print("data \n $data"); // 확인용
-      //print(data.runtimeType); // 확인용
+      //print("data \n $data");
 
     } else {
-      // 만약 응답이 OK가 아니면, 에러를 던집니다.
       throw Exception('Failed to load post');
     }
+  }
+
+  getLocation() {
+    for (var i = 0; i < data.length; i++) {
+      long = data[i]["mapX"];
+      lat = data[i]["mapY"];
+      //_latLang = [LatLng(data[i]["mapX"], data[i]["mapX"])];
+    }
+    //print(long);
+    //print(lat);
+  }
+
+  getMarker() {
+    for(var i = 0; i < data.length; i++) {
+      _markers.add(Marker(
+          markerId: 'id',
+          position: LatLng(data[i]["mapX"], data[i]["mapX"]),
+          captionText: data[i]["facltNm"] ?? 'default value',
+          captionColor: Colors.indigo,
+          captionTextSize: 20.0,
+          alpha: 0.8,
+          captionOffset: 30,
+          anchor: AnchorPoint(0.5, 1),
+          width: 45,
+          height: 45,
+          infoWindow: data[i]["lineIntro"]?? ' ',
+          //onMarkerTab: _onMarkerTap
+      ));
+    }
+  }
+
+  start() async {
+    await getPosition();
+    await getData();
+    await getLocation();
+    await getMarker();
   }
 
   @override
@@ -67,7 +106,6 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       OverlayImage.fromAssetImage(
         assetName: 'icon/marker.png',
-        //devicePixelRatio: window.devicePixelRatio,
       ).then((image) {
         setState(() {
           _markers.add(Marker(
@@ -83,12 +121,15 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
               width: 45,
               height: 45,
               infoWindow: '인포 윈도우',
-              onMarkerTab: _onMarkerTap));
+              //onMarkerTab: _onMarkerTap
+          ));
         });
       });
     });
     super.initState();
-    getData();
+    loading = true;
+    start();
+    //addMarker(_latLang);
   }
 
   @override
@@ -97,7 +138,7 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
       child: Scaffold(
         body: Column(
           children: <Widget>[
-            ElevatedButton.icon(     // <-- TextButton
+            ElevatedButton.icon(
               onPressed: (){
                 Navigator.push(context,
                   MaterialPageRoute(builder: (context) => NearbyCampingSites()),
@@ -106,91 +147,10 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
               icon: Icon(Icons.near_me,),
               label: Text('주변 캠핑장 목록 조회'),
             ),
-            _controlPanel(),
+            // _controlPanel(),
             _naverMap(),
           ],
         ),
-      ),
-    );
-  }
-
-  _controlPanel() {
-    return Container(
-      padding: EdgeInsets.all(16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          // 추가
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _currentMode = MODE_ADD),
-              child: Container(
-                decoration: BoxDecoration(
-                    color:
-                    _currentMode == MODE_ADD ? Colors.black : Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.black)),
-                padding: EdgeInsets.all(8),
-                margin: EdgeInsets.only(right: 8),
-                child: Text(
-                  '추가',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color:
-                    _currentMode == MODE_ADD ? Colors.white : Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // 삭제
-          Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _currentMode = MODE_REMOVE),
-              child: Container(
-                decoration: BoxDecoration(
-                    color: _currentMode == MODE_REMOVE
-                        ? Colors.black
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: Colors.black)),
-                padding: EdgeInsets.all(8),
-                margin: EdgeInsets.only(right: 8),
-                child: Text(
-                  '삭제',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _currentMode == MODE_REMOVE
-                        ? Colors.white
-                        : Colors.black,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // none
-          GestureDetector(
-            onTap: () => setState(() => _currentMode = MODE_NONE),
-            child: Container(
-              decoration: BoxDecoration(
-                  color:
-                  _currentMode == MODE_NONE ? Colors.black : Colors.white,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: Colors.black)),
-              padding: EdgeInsets.all(4),
-              child: Icon(
-                Icons.clear,
-                color: _currentMode == MODE_NONE ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -201,55 +161,73 @@ class _MarkerMapPageState extends State<MarkerMapPage> {
         children: <Widget>[
           NaverMap(
             onMapCreated: _onMapCreated,
-            onMapTap: _onMapTap,
             markers: _markers,
             initLocationTrackingMode: LocationTrackingMode.Follow,
             locationButtonEnable: true,
+            onMapLongTap: _onMapLongTap,
           ),
         ],
       ),
     );
   }
 
+  _onMapLongTap(LatLng position) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+          '[onLongTap] lat: ${position.latitude}, lon: ${position.longitude}'),
+      duration: const Duration(milliseconds: 500),
+      backgroundColor: Colors.black,
+    ));
+  }
   // ================== method ==========================
 
   void _onMapCreated(NaverMapController controller) {
     _controller.complete(controller);
   }
 
-  void _onMapTap(LatLng latLng) {
-    if (_currentMode == MODE_ADD) {
-      _markers.add(Marker(
-        markerId: DateTime.now().toIso8601String(),
-        position: latLng,
-        infoWindow: '테스트',
-        onMarkerTab: _onMarkerTap,
-      ));
-      setState(() {});
-    }
-  }
+  // void _onMapTap(LatLng latLng) {
+  //   if (_currentMode == MODE_ADD) {
+  //     for(var i = 0; i < data.length; i++) {
+  //       _markers.add(Marker(
+  //           markerId: 'id',
+  //           position: LatLng(data[i]["mapX"], data[i]["mapX"]),
+  //           captionText: data[i]["facltNm"] ?? 'default value',
+  //           captionColor: Colors.indigo,
+  //           captionTextSize: 20.0,
+  //           alpha: 0.8,
+  //           captionOffset: 30,
+  //           anchor: AnchorPoint(0.5, 1),
+  //           width: 45,
+  //           height: 45,
+  //           infoWindow: data[i]["lineIntro"]?? ' ',
+  //           //onMarkerTab: _onMarkerTap
+  //       ));
+  //     }
+  //     setState(() {});
+  //   }
+  // }
 
-  void GoMarker(LatLng latLng) {
-    if (_currentMode == MODE_ADD) {
-      _markers.add(Marker(
-        markerId: DateTime.now().toIso8601String(),
-        position: latLng,
-        infoWindow: '테스트',
-        onMarkerTab: _onMarkerTap,
-      ));
-      setState(() {});
-    }
-  }
+  // void GoMarker(LatLng latLng) {
+  //   if (_currentMode == MODE_ADD) {
+  //     _markers.add(Marker(
+  //       markerId: DateTime.now().toIso8601String(),
+  //       position: latLng,
+  //       infoWindow: '테스트',
+  //       onMarkerTab: _onMarkerTap,
+  //     ));
+  //     setState(() {});
+  //   }
+  // }
 
-  void _onMarkerTap(Marker marker, Map<String, int> iconSize) {
-    int pos = _markers.indexWhere((m) => m.markerId == marker.markerId);
-    setState(() {
-      _markers[pos].captionText = '선택됨';
-    });
-    if (_currentMode == MODE_REMOVE) {
-      setState(() {
-        _markers.removeWhere((m) => m.markerId == marker.markerId);
-      });
-    }
-  }
+  // void _onMarkerTap(Marker marker, Map<String, int> iconSize) {
+  //   int pos = _markers.indexWhere((m) => m.markerId == marker.markerId);
+  //   setState(() {
+  //     _markers[pos].captionText = '선택됨';
+  //   });
+  //   if (_currentMode == MODE_REMOVE) {
+  //     setState(() {
+  //       _markers.removeWhere((m) => m.markerId == marker.markerId);
+  //     });
+  //   }
+  // }
 }
